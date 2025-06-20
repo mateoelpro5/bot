@@ -116,7 +116,10 @@ class Music(commands.Cog):
                         await vc.disconnect()
                         await ctx.send("⏹️ Fin de la cola, desconectando.")
         except Exception as e:
-            print(f"❌ Error en play_next: {e}")
+            import traceback
+            print("❌ Error en play_next:")
+            traceback.print_exc()
+
 
     @commands.command()
     async def play(self, ctx, *, search: str):
