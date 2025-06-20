@@ -1,7 +1,2 @@
 [phases.setup]
 nixPkgs = ["ffmpeg"]
-
-[phases.build]
-commands = [
-  "pip install -r requirements.txt"
-]
