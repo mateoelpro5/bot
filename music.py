@@ -78,7 +78,7 @@ class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-async def play_next(self, ctx, vc):
+    async def play_next(self, ctx, vc):
         guild_id = ctx.guild.id
         try:
             if queues.get(guild_id):
