@@ -50,13 +50,14 @@ def get_tracks_from_playlist(spotify_url):
     results = sp.playlist_tracks(playlist_id)
     return [f"{item['track']['artists'][0]['name']} - {item['track']['name']}" for item in results['items']]
 
-async def get_audio_url(search):
+sync def get_audio_url(search):
     def yt():
         opts = {
             'format': 'bestaudio/best',
             'noplaylist': True,
             'quiet': True,
             'default_search': 'ytsearch',
+            'cookiefile': 'cookies.txt',  # ✅ esta línea permite usar las cookies
         }
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(search, download=False)
