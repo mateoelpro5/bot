@@ -1,0 +1,6 @@
+discord.py
+yt-dlp
+spotipy
+lyricsgenius
+aiohttp
+pynacl
