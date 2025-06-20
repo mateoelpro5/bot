@@ -1,2 +1,2 @@
-echo "[phases.setup]
-nixPkgs = [\"ffmpeg\"]" > nixpacks.toml
+[phases.setup]
+nixPkgs = ['ffmpeg']
