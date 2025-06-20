@@ -167,8 +167,8 @@ class Music(commands.Cog):
                 return await ctx.send(f"❌ No se pudo obtener audio: {e}")
 
         await ctx.send(f"✅ Añadido a la cola: **{title}**")
-        if not vc.is_playing() and not vc.is_paused():
-            await self.play_next(ctx, vc)
+        if not now_playing.get(guild_id) and len(queues[guild_id]) == 1:
+           await self.play_next(ctx, vc)
 
     @commands.command()
     async def skip(self, ctx):
