@@ -1,2 +1,17 @@
 [phases.setup]
-nixPkgs = ["python311", "ffmpeg", "libopus", "pkg-config"]
+nixPkgs = [
+  "ffmpeg"
+  "libopus"
+  "pkg-config"
+  "python311"
+  "libsodium"
+]
+
+[phases.install]
+cmds = [
+  "python -m venv venv",
+  ". venv/bin/activate && pip install -r requirements.txt"
+]
+
+[start]
+cmd = ". venv/bin/activate && python main.py"
