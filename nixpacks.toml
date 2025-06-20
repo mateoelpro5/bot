@@ -1,16 +1,17 @@
 [phases.setup]
-nixPkgs = ["ffmpeg",
-  "libopus",
+nixPkgs = [
+  "ffmpeg",
   "pkg-config",
-  "python311",
-  "libsodium"
+  "libsodium",
+  "libopus",
+  "python311"
 ]
 
 [phases.install]
 cmds = [
-  "python -m venv venv",
-  ". venv/bin/activate && pip install -r requirements.txt"
+  "python3 -m venv /opt/venv",
+  ". /opt/venv/bin/activate && pip install -r requirements.txt"
 ]
 
 [start]
-cmd = ". venv/bin/activate && python main.py"
+cmd = ". /opt/venv/bin/activate && LD_LIBRARY_PATH=/nix/var/nix/profiles/default/lib python main.py"
