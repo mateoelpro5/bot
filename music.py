@@ -13,7 +13,9 @@ import os
 SPOTIFY_CLIENT_ID = os.getenv("SPOTIFY_CLIENT_ID")
 SPOTIFY_CLIENT_SECRET = os.getenv("SPOTIFY_CLIENT_SECRET")
 GENIUS_TOKEN = os.getenv("GENIUS_TOKEN")
-
+print("SPOTIFY_CLIENT_ID:", SPOTIFY_CLIENT_ID)
+print("SPOTIFY_CLIENT_SECRET:", SPOTIFY_CLIENT_SECRET)
+print("GENIUS_TOKEN:", GENIUS_TOKEN)
 sp = spotipy.Spotify(auth_manager=SpotifyClientCredentials(
     client_id=SPOTIFY_CLIENT_ID, client_secret=SPOTIFY_CLIENT_SECRET
 ))
@@ -77,7 +79,8 @@ async def fetch_and_add(track, guild_id):
 class Music(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-async def play_next(self, ctx, vc):
+
+    async def play_next(self, ctx, vc):
     guild_id = ctx.guild.id
     try:
         if queues.get(guild_id):
