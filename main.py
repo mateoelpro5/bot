@@ -1,7 +1,16 @@
 import discord
 from discord.ext import commands
 import os
+from dotenv import load_dotenv
+import discord.opus
 
+if not discord.opus.is_loaded():
+    try:
+        discord.opus.load_opus('libopus.so')
+        print("✅ Opus cargado correctamente.")
+    except Exception as e:
+        print(f"❌ No se pudo cargar Opus: {e}")
+load_dotenv()
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 print("TOKEN:", TOKEN)
