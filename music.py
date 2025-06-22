@@ -81,67 +81,65 @@ class Music(commands.Cog):
 
     async def play_next(self, ctx, vc):
         guild_id = ctx.guild.id
-    try:
-        if queues.get(guild_id):
-            url, title = queues[guild_id].popleft()
-            now_playing[guild_id] = title
 
-            # Asegúrate de que sigue conectado justo antes de reproducir
-            if vc is None or not vc.is_connected():
-                try:
-                    if ctx.author.voice:
-                        vc = await ctx.author.voice.channel.connect()
-                    else:
-                        await ctx.send("❌ No estoy conectado a voz y no se pudo reconectar.")
+        try:
+            if queues.get(guild_id):
+                url, title = queues[guild_id].popleft()
+                now_playing[guild_id] = title
+
+                if vc is None or not vc.is_connected():
+                    try:
+                        if ctx.author.voice:
+                            vc = await ctx.author.voice.channel.connect()
+                        else:
+                            await ctx.send("❌ No estoy conectado a voz y no se pudo reconectar.")
+                            return
+                    except Exception as e:
+                        await ctx.send(f"❌ Error al reconectar: {e}")
                         return
-                except Exception as e:
-                    await ctx.send(f"❌ Error al reconectar: {e}")
+
+                source = discord.FFmpegPCMAudio(
+                    url,
+                    before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
+                    options='-vn'
+                )
+                volume = volumes.get(guild_id, 0.5)
+                source = discord.PCMVolumeTransformer(source, volume)
+
+                def after_play(error):
+                    if error:
+                        print(f"❌ Error: {error}")
+                    if vc and vc.is_connected():
+                        fut = self.play_next(ctx, vc)
+                        asyncio.run_coroutine_threadsafe(fut, self.bot.loop)
+
+                if vc.is_connected():
+                    vc.play(source, after=after_play)
+                else:
+                    await ctx.send("⚠️ Me desconectaron justo antes de reproducir.")
                     return
 
-            source = discord.FFmpegPCMAudio(
-                url,
-                before_options='-reconnect 1 -reconnect_streamed 1 -reconnect_delay_max 5',
-                options='-vn'
-            )
-            volume = volumes.get(guild_id, 0.5)
-            source = discord.PCMVolumeTransformer(source, volume)
+                if guild_id in reaction_messages:
+                    try:
+                        asyncio.create_task(reaction_messages[guild_id].delete())
+                    except:
+                        pass
 
-            def after_play(error):
-                if error:
-                    print(f"❌ Error: {error}")
-                if vc and vc.is_connected():
-                    fut = self.play_next(ctx, vc)
-                    asyncio.run_coroutine_threadsafe(fut, self.bot.loop)
-
-            # Verifica de nuevo antes de reproducir
-            if vc.is_connected():
-                vc.play(source, after=after_play)
+                msg = await ctx.send(f"🎶 Reproduciendo: **{title}**\nReacciona para controlar:")
+                for emoji in ["⏸️", "▶️", "⏭️", "⏹️", "🔉", "🔊"]:
+                    await msg.add_reaction(emoji)
+                reaction_messages[guild_id] = msg
             else:
-                await ctx.send("⚠️ Me desconectaron justo antes de reproducir.")
-                return
-
-            # Reacciones
-            if guild_id in reaction_messages:
-                try:
-                    asyncio.create_task(reaction_messages[guild_id].delete())
-                except:
-                    pass
-
-            msg = await ctx.send(f"🎶 Reproduciendo: **{title}**\nReacciona para controlar:")
-            for emoji in ["⏸️", "▶️", "⏭️", "⏹️", "🔉", "🔊"]:
-                await msg.add_reaction(emoji)
-            reaction_messages[guild_id] = msg
-        else:
-            await asyncio.sleep(5)
-            if not queues.get(guild_id):
-                now_playing[guild_id] = None
-                if vc and vc.is_connected():
-                    await vc.disconnect()
-                    await ctx.send("⏹️ Fin de la cola, desconectando.")
-    except Exception as e:
-        import traceback
-        print("❌ Error en play_next:")
-        traceback.print_exc()
+                await asyncio.sleep(5)
+                if not queues.get(guild_id):
+                    now_playing[guild_id] = None
+                    if vc and vc.is_connected():
+                        await vc.disconnect()
+                        await ctx.send("⏹️ Fin de la cola, desconectando.")
+        except Exception as e:
+            import traceback
+            print("❌ Error en play_next:")
+            traceback.print_exc()
 
     @commands.command()
     async def play(self, ctx, *, search: str):
