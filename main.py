@@ -1,9 +1,12 @@
 import discord
-import threading
+if not discord.opus.is_loaded():
+    discord.opus.load_opus('/nix/var/nix/profiles/default/lib/libopus.so.0')
+from discord.ext import commands
 import os
+from dotenv import load_dotenv
+import threading
 import sys
 import time
-
 
 def restart_bot_luego():
     time.sleep(60 * 60 * 23)  # 23 horas
@@ -11,12 +14,6 @@ def restart_bot_luego():
     os.execv(sys.executable, ['python'] + sys.argv)
 
 threading.Thread(target=restart_bot_luego).start()
-
-
-if not discord.opus.is_loaded():
-    discord.opus.load_opus('/nix/var/nix/profiles/default/lib/libopus.so.0')
-from discord.ext import commands
-import os
 
 if not discord.opus.is_loaded():
     try:
