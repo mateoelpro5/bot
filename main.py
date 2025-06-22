@@ -3,7 +3,7 @@ if not discord.opus.is_loaded():
     discord.opus.load_opus('/nix/var/nix/profiles/default/lib/libopus.so.0')
 from discord.ext import commands
 import os
-from dotenv import load_dotenv
+
 import threading
 import sys
 import time
@@ -21,7 +21,7 @@ if not discord.opus.is_loaded():
         print("✅ Opus cargado correctamente.")
     except Exception as e:
         print(f"❌ No se pudo cargar Opus: {e}")
-load_dotenv()
+
 
 TOKEN = os.getenv("DISCORD_TOKEN")
 print("TOKEN:", TOKEN)
