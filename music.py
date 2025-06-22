@@ -80,8 +80,7 @@ class Music(commands.Cog):
         self.bot = bot
 
     async def play_next(self, ctx, vc):
-    guild_id = ctx.guild.id
-
+        guild_id = ctx.guild.id
     try:
         if queues.get(guild_id):
             url, title = queues[guild_id].popleft()
