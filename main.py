@@ -17,7 +17,6 @@ if not discord.opus.is_loaded():
     discord.opus.load_opus('/nix/var/nix/profiles/default/lib/libopus.so.0')
 from discord.ext import commands
 import os
-from dotenv import load_dotenv
 
 if not discord.opus.is_loaded():
     try:
