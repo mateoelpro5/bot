@@ -4,14 +4,16 @@ nixPkgs = [
   "pkg-config",
   "libsodium",
   "libopus",
-  "python311"
+  "python311",
+  "bash"
 ]
 
 [phases.install]
 cmds = [
   "python3 -m venv /opt/venv",
-  ". /opt/venv/bin/activate && pip install -r requirements.txt"
+  ". /opt/venv/bin/activate && pip install -r requirements.txt",
+  "chmod +x start.sh"
 ]
 
 [start]
-cmd = ". /opt/venv/bin/activate && LD_LIBRARY_PATH=/nix/var/nix/profiles/default/lib python main.py"
+cmd = "./start.sh"
