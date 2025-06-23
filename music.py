@@ -1,3 +1,4 @@
+
 import discord
 from discord.ext import commands
 import yt_dlp
@@ -81,7 +82,6 @@ class Music(commands.Cog):
 
     async def play_next(self, ctx, vc):
         guild_id = ctx.guild.id
-
         try:
             if queues.get(guild_id):
                 url, title = queues[guild_id].popleft()
@@ -163,9 +163,7 @@ class Music(commands.Cog):
             try:
                 canciones = get_tracks_from_playlist(search)
                 await ctx.send(f"📃 Playlist detectada. Añadiendo {len(canciones)} canciones...")
-                added_titles = await asyncio.gather(
-                    *[fetch_and_add(track, guild_id) for track in canciones]
-                )
+                added_titles = await asyncio.gather(*[fetch_and_add(track, guild_id) for track in canciones])
                 total = len([t for t in added_titles if t])
                 await ctx.send(f"✅ Se añadieron {total} canciones a la cola.")
             except Exception as e:
@@ -193,36 +191,36 @@ class Music(commands.Cog):
     @commands.command()
     async def skip(self, ctx):
         vc = ctx.voice_client
-        if vc and vc.is_playing():
-            vc.stop()
-            await ctx.send("⏭️ Saltado.")
-        else:
-            await ctx.send("⚠️ No hay música.")
+        if not vc or not vc.is_playing():
+            return await ctx.send("⚠️ No hay música para saltar.")
+        vc.stop()
+        await ctx.send("⏭️ Canción saltada.")
 
     @commands.command()
     async def stop(self, ctx):
         vc = ctx.voice_client
-        if vc:
-            queues[ctx.guild.id] = deque()
-            now_playing[ctx.guild.id] = None
-            await vc.disconnect()
-            await ctx.send("🛑 Bot detenido.")
-        else:
-            await ctx.send("❌ No estoy en voz.")
+        if not vc:
+            return await ctx.send("❌ No estoy conectado a un canal de voz.")
+        queues[ctx.guild.id] = deque()
+        now_playing[ctx.guild.id] = None
+        await vc.disconnect()
+        await ctx.send("🛑 Bot desconectado y cola limpiada.")
 
     @commands.command()
     async def pause(self, ctx):
         vc = ctx.voice_client
-        if vc and vc.is_playing():
-            vc.pause()
-            await ctx.send("⏸️ Pausado.")
+        if not vc or not vc.is_playing():
+            return await ctx.send("⚠️ No hay música reproduciéndose.")
+        vc.pause()
+        await ctx.send("⏸️ Música pausada.")
 
     @commands.command()
     async def resume(self, ctx):
         vc = ctx.voice_client
-        if vc and vc.is_paused():
-            vc.resume()
-            await ctx.send("▶️ Reanudado.")
+        if not vc or not vc.is_paused():
+            return await ctx.send("⚠️ La música no está pausada.")
+        vc.resume()
+        await ctx.send("▶️ Música reanudada.")
 
     @commands.command()
     async def shuffle(self, ctx):
@@ -231,36 +229,39 @@ class Music(commands.Cog):
             temp_list = list(queues[guild_id])
             shuffle(temp_list)
             queues[guild_id] = deque(temp_list)
-            await ctx.send("🔀 Cola mezclada aleatoriamente.")
+            await ctx.send("🔀 Cola mezclada.")
         else:
-            await ctx.send("📭 No hay canciones en la cola para mezclar.")
+            await ctx.send("📭 La cola está vacía, no se puede mezclar.")
 
     @commands.command()
     async def queue(self, ctx):
         q = queues.get(ctx.guild.id, deque())
         if not q:
             return await ctx.send("📭 La cola está vacía.")
-        await ctx.send("🎶 Cola:\n" + "\n".join(f"{i+1}. {t}" for i, (_, t) in enumerate(q)))
+        lines = [f"{i+1}. {t}" for i, (_, t) in enumerate(q)]
+        chunks = ["\n".join(lines[i:i+20]) for i in range(0, len(lines), 20)]
+        for chunk in chunks:
+            await ctx.send(f"🎶 Cola:\n```{chunk}```")
 
     @commands.command()
     async def nowplaying(self, ctx):
         t = now_playing.get(ctx.guild.id)
         if t:
-            await ctx.send(f"🎧 Ahora suena: **{t}**")
+            await ctx.send(f"🎧 Reproduciendo ahora: **{t}**")
         else:
-            await ctx.send("🎧 No suena nada.")
+            await ctx.send("🔇 No hay nada sonando actualmente.")
 
     @commands.command()
     async def lyrics(self, ctx, *, query: str = None):
         if query is None:
             query = now_playing.get(ctx.guild.id)
             if not query:
-                return await ctx.send("🔇 No hay canción actual ni consulta dada.")
-        await ctx.send(f"📄 Buscando letra: **{query}**")
+                return await ctx.send("❌ No hay canción actual ni consulta especificada.")
+        await ctx.send(f"📄 Buscando letra de: **{query}**")
         try:
             song = genius.search_song(query)
             if not song or not song.lyrics:
-                return await ctx.send("❌ No encontré letra.")
+                return await ctx.send("❌ No encontré letra para esta canción.")
             text = song.lyrics
             for i in range(0, len(text), 1900):
                 await ctx.send(f"```{text[i:i+1900]}```")
@@ -278,13 +279,13 @@ class Music(commands.Cog):
         emoji = reaction.emoji
 
         if reaction_messages.get(gid) and msg.id == reaction_messages[gid].id:
-            if emoji == "⏸️" and vc.is_playing():
+            if emoji == "⏸️" and vc and vc.is_playing():
                 vc.pause()
-            elif emoji == "▶️" and vc.is_paused():
+            elif emoji == "▶️" and vc and vc.is_paused():
                 vc.resume()
-            elif emoji == "⏭️":
+            elif emoji == "⏭️" and vc:
                 vc.stop()
-            elif emoji == "⏹️":
+            elif emoji == "⏹️" and vc:
                 await vc.disconnect()
                 queues[gid] = deque()
                 now_playing[gid] = None
@@ -292,7 +293,10 @@ class Music(commands.Cog):
                 volumes[gid] = max(volumes[gid] - 0.1, 0.1)
             elif emoji == "🔊":
                 volumes[gid] = min(volumes[gid] + 0.1, 2.0)
-            await reaction.remove(user)
+            try:
+                await reaction.remove(user)
+            except:
+                pass
 
 async def setup(bot):
     await bot.add_cog(Music(bot))
