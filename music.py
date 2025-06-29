@@ -59,6 +59,7 @@ async def get_audio_url(search):
             'noplaylist': True,
             'quiet': True,
             'default_search': 'ytsearch',
+            'cookiefile': 'cookies.txt',  # AÑADIDO: Cookies de tu navegador
         }
         with yt_dlp.YoutubeDL(opts) as ydl:
             info = ydl.extract_info(search, download=False)
